@@ -21,6 +21,7 @@ app.get('/', (request, response) => {
  app.post('/upload', uploadFiles,(req, res)=>{
     // Handle the uploaded files
   const files = req.files;
+  console.log(req.files)
 
   // Process and store the files as required
   // For example, save the files to a specific directory using fs module
