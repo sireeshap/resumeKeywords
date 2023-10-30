@@ -2,8 +2,15 @@
 const natural = require('natural');
 const fs = require('fs');
 const PDFParser = require('pdf-parse');
-
 const tokenizer = new natural.WordTokenizer();
+const env = require('./../../environment/environment')
+const { Configuration, OpenAIApi } = require('openai');
+const axios = require('axios');
+
+const apiKey =  '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'; // Replace with your actual API key
+const endpoint = 'https://api.openai.com/v1/engines/davinci/completions'; // Adjust the endpoint as needed
+
+chatConversation=[];
 async function extractTextFromPDF(filePath) {
   const dataBuffer = fs.readFileSync(filePath);
   const data = await PDFParser(dataBuffer);
@@ -46,13 +53,44 @@ matched.push(skill)
   }
   return matched.filter(onlyUnique)
 }
+// function pushChatContent(content, person, cssClass) {
+//   const chatToPush = { person:person, response:content, cssClass:cssClass};
+//   this.chatConversation.push(chatToPush);
+// }
+async function invokeGPT(promptText) {
+  var responseData='';
+  if (promptText.length < 2) {
+    return;
+  }
+    axios.post(endpoint, {
+      prompt: promptText,
+      max_tokens: 3000
+    }, {
+      headers: {
+        'Authorization': `Bearer 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`,
+        'Content-Type': 'application/json'
+      }
+    })
+    .then((response) => {
+      responseData= response.data.choices[0].text;
+    })
+    .catch((error) => {
+      console.error(error);
+      responseData = JSON.stringify(error)
+    });
+  return responseData
+
+}
+
 async function parseResumes(filePath){
   var keywords=[];
   await extractTextFromPDF(filePath)
   .then(text => {
     const resumeText =text;
-    keywords = extractKeywords(resumeText);
-    console.log(keywords)
+    var prompt1 = "give me JSON format which contain skill in array, location, name, phone number, email, total overall working experience with out any explanation from text"
+    return invokeGPT(prompt1+' "'+resumeText+'"');
+    // keywords = extractKeywords(resumeText);
+    // console.log(keywords)
     
   })
   .catch(error => {
@@ -63,4 +101,5 @@ async function parseResumes(filePath){
   // Usage example
  
 }
+
 module.exports =parseResumes;
